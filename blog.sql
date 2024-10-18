@@ -1,6 +1,6 @@
-CREATE DATABASE blog_db;
+CREATE DATABASE blog;
 
-USE blog_db;
+USE blog;
 
 -- Users table
 CREATE TABLE users (

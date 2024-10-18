@@ -1,24 +1,33 @@
 <?php
-session_start();
-include 'connect.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit(0);
+require 'include/header.php';
+require 'include/connect.php';
+if(isset($_POST('comment'))){
+if(empty($_POST['comment'])){
+    echo "<script>alert('fill in all entries')</script>";
 }
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $post_id = $_POST['post_id'];
-    $comment = $_POST['comment'];
-    $user_id = $_SESSION['user_id'];
-
-    $stmt = $conn->prepare("INSERT INTO comments (post_id, user_id, comment) VALUES (?, ?, ?)");
-    $stmt->bind_param("iis", $post_id, $user_id, $comment);
-
-    if ($stmt->execute()) {
-        header('Location: post.php?id=' . $post_id);
-    } else {
-        echo "Error: " . $conn->error;
+else{
+    $comment =$_POST['comment'];
+    $stmt=$conn->prepare("INSERT INTO comments (comment) VALUES(:comment)");
+    $stmt->bindParam(':comment',$comment);
+    if($stmt->execute()){
+        $_SESSION['post_id'];
+        echo "<script>alert('comment posted successfully')</script>";
+        header('Location:index.php');
+    }
+    else{
+        echo "<script>alert('unable to post')</script>";
     }
 }
+}
 ?>
+<main class="w-50 m-auto">
+    <form action="comment.php" method="post">
+    <div class="form-group mb-3">
+        <label for="content" class="form-label">comment</label>
+         <textarea name="comment" id="content" class="form-control" rows="5" placeholder="Enter the main content here" required></textarea>
+    </div>
+    <button type="comment" class="btn btn-primary d-inline">comment</button>
+    </form>
+</main>
+<?php require 'include/footer.php';?>
+

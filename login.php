@@ -1,77 +1,89 @@
 <?php
-session_start();
-include 'connect.php';
-if($_SERVER['REQUEST_METHOD']=="POST"){
-$email=$_POST['email'];
-$password=$_POST['password'];
-$stmt=$conn->prepare("SELECT * FROM users WHERE email=?");
-$stmt->bind_param("s",$email);
-$stmt->execute();
-$result=$stmt->get_result();
-$user =$result->fetch_assoc();
-if(password_verify($password,$user['password'])){
-    $_SESSION['user_id']=$user['id'];
-    $_SESSION['name']=$user['name'];
-    header('Location:dashboard.php');
+require 'include/header.php';
+require 'include/connect.php';
+if(isset($_POST['login'])){
+   
+    if(empty($_POST['email']) || empty($_POST['password'])){
+        echo "<script> alert('all entries must be filled');</script>";
+    } else {
+        $email = $_POST['email'];
+        $password = $_POST['password'];
 
-}
-else{
-    echo "invalid logins";
-}
+       
+        $stmt = $conn->prepare("SELECT * FROM users WHERE email=:email");
+        $stmt->bindParam(':email', $email);
+
+       
+        if($stmt->execute()){
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Check if user exists and verify password
+            if($user && password_verify($password, $user['password'])){
+                $_SESSION['email']=$user['email'];
+                header('Location:index.php');
+                exit();
+            } else {
+                echo "<script> alert('Invalid email or password');</script>"; 
+            }
+        } else {
+            echo "<script> alert('Query execution failed');</script>";
+        }
+    }
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>Login</title>
-</head>
-<body>
-    <div class="container mt-5">
-        <h2 class="text-center">Login</h2>
+
+<main class="w-50 m-auto">
+  <form action="login.php" method="post">
+    <div class="card mt-3">
+      <div class="card-header text-center">
+        Login
+      </div>
+      <div class="card-body">
         <div class="row justify-content-center">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <form method="POST" action="login.php">
-                            
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                    <div class="input-group-text">
-                                        <input type="checkbox" class="form-check-input" id="showPassword">
-                                        <label for="showPassword" class="form-check-label"> Show Password</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-center align-items-center">
-                                <button type="submit" class="btn btn-primary">Login</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="" class="form-label">Email</label>
+              <input type="email" name="email" class="form-control">
             </div>
+            
+            <div class="mb-3">
+              <label for="" class="form-label">Password</label>
+              <div class="input-group">
+                <input type="password" name="password" id="password" class="form-control">
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-primary" onclick="togglePasswordVisibility()">
+                    <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="d-grid gap-2 col-6 mx-auto">
+              <button name="login" class="btn btn-primary">Sign in</button>
+            </div>
+            <p class="text-center mt-2">Don't  have an account? <a href="register.php">register</a></p>
+          </div>
         </div>
+      </div>
     </div>
+  </form>
+</main>
+<script>
+  function togglePasswordVisibility() {
+    const passwordInput = document.getElementById("password");
+    const passwordToggleIcon = document.getElementById("passwordToggleIcon");   
 
-    <script>
-        const passwordField = document.getElementById("password");
-        const showPasswordBox = document.getElementById("showPassword");
 
-        showPasswordBox.addEventListener('change', function () {
-            if (this.checked) {
-                passwordField.type = 'text';
-            } else {
-                passwordField.type = 'password';
-            }
-        });
-    </script>
-</body>
-</html>
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      passwordToggleIcon.classList.remove("fa-eye");
+      passwordToggleIcon.classList.add("fa-eye-slash");   
+
+    } else {
+      passwordInput.type = "password";
+      passwordToggleIcon.classList.remove("fa-eye-slash");
+      passwordToggleIcon.classList.add("fa-eye");   
+
+    }
+  }
+</script>
+<?php require 'include/footer.php';?>
